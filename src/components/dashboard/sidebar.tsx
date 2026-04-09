@@ -71,7 +71,7 @@ export function DashboardSidebar() {
               height={36}
               className="h-auto w-auto max-w-[160px]"
             />
-            <p className="text-lg font-light text-white">Equifax Analytics Dashboard</p>
+            <p className="text-lg font-light text-white">Voicing AI Dashboard</p>
           </div>
         ) : (
           <div className="grid size-10 place-items-center rounded-xl border border-neutral-700 bg-neutral-900">

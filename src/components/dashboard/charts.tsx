@@ -93,17 +93,6 @@ function toHourLabel(value: unknown) {
   return `${String(parsed).padStart(2, "0")}:00`;
 }
 
-function computeDynamicChartHeight(
-  count: number,
-  options: { min: number; max: number; perItem: number; base: number },
-) {
-  if (count <= 0) {
-    return options.min;
-  }
-  const raw = options.base + count * options.perItem;
-  return Math.max(options.min, Math.min(options.max, raw));
-}
-
 function computeYAxisUpperBound(values: number[]) {
   const maxValue = values.reduce((max, value) => Math.max(max, safeNumber(value)), 0);
   if (maxValue <= 0) {
@@ -146,20 +135,34 @@ export function normalizeChartData(source: unknown[] | undefined): ChartDatum[] 
   });
 }
 
-export function IntentPieChart({ data }: { data: ChartDatum[] }) {
+export function IntentPieChart({
+  data,
+  height = 340,
+}: {
+  data: ChartDatum[];
+  height?: number;
+}) {
   const chartData = data.filter((item) => item.value > 0);
   const total = chartData.reduce((acc, item) => acc + item.value, 0);
+  const chartHeight = height;
+  const shadowOuterRadius = Math.max(100, Math.round(chartHeight * 0.39));
+  const shadowInnerRadius = Math.max(62, Math.round(chartHeight * 0.24));
+  const mainOuterRadius = Math.max(96, shadowOuterRadius - 4);
+  const mainInnerRadius = Math.max(58, shadowInnerRadius - 4);
 
   if (!chartData.length) {
     return (
-      <div className="flex h-[360px] items-center justify-center text-sm text-neutral-500">
+      <div
+        className="flex items-center justify-center text-sm text-neutral-500"
+        style={{ height: chartHeight }}
+      >
         No chart data in selected range.
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={360}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
       <PieChart margin={{ top: 12, right: 8, left: 8, bottom: 12 }}>
         <Pie
           data={chartData}
@@ -167,8 +170,8 @@ export function IntentPieChart({ data }: { data: ChartDatum[] }) {
           nameKey="label"
           cx="36%"
           cy="53%"
-          innerRadius={82}
-          outerRadius={138}
+          innerRadius={shadowInnerRadius}
+          outerRadius={shadowOuterRadius}
           stroke="none"
           isAnimationActive
           labelLine={false}
@@ -186,8 +189,8 @@ export function IntentPieChart({ data }: { data: ChartDatum[] }) {
           nameKey="label"
           cx="36%"
           cy="50%"
-          innerRadius={78}
-          outerRadius={134}
+          innerRadius={mainInnerRadius}
+          outerRadius={mainOuterRadius}
           stroke="#0B1020"
           strokeWidth={2}
           isAnimationActive
@@ -235,16 +238,17 @@ export function IntentPieChart({ data }: { data: ChartDatum[] }) {
   );
 }
 
-export function HorizontalDistribution({ data }: { data: ChartDatum[] }) {
+export function HorizontalDistribution({
+  data,
+  height = 340,
+}: {
+  data: ChartDatum[];
+  height?: number;
+}) {
   const chartData = [...data]
     .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value);
-  const chartHeight = computeDynamicChartHeight(chartData.length, {
-    min: 260,
-    max: 480,
-    perItem: 38,
-    base: 84,
-  });
+  const chartHeight = height;
 
   if (!chartData.length) {
     return (
@@ -294,7 +298,13 @@ export function HorizontalDistribution({ data }: { data: ChartDatum[] }) {
   );
 }
 
-export function DualIntentBarChart({ data }: { data: ChartDatum[] }) {
+export function DualIntentBarChart({
+  data,
+  height = 340,
+}: {
+  data: ChartDatum[];
+  height?: number;
+}) {
   const chartData = data
     .map((item) => ({
       ...item,
@@ -302,12 +312,7 @@ export function DualIntentBarChart({ data }: { data: ChartDatum[] }) {
       transferred: item.transferred ?? 0,
     }))
     .sort((a, b) => (b.classified ?? 0) - (a.classified ?? 0));
-  const chartHeight = computeDynamicChartHeight(chartData.length, {
-    min: 280,
-    max: 500,
-    perItem: 42,
-    base: 90,
-  });
+  const chartHeight = height;
 
   if (!chartData.length) {
     return (
@@ -383,10 +388,12 @@ export function StandardBarChart({
   data,
   valueColor = "#64748b",
   yMax,
+  height = 340,
 }: {
   data: ChartDatum[];
   valueColor?: string;
   yMax?: number;
+  height?: number;
 }) {
   const computedYMax =
     typeof yMax === "number"
@@ -394,7 +401,7 @@ export function StandardBarChart({
       : computeYAxisUpperBound(data.map((item) => safeNumber(item.value)));
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 6, right: 8, left: 0, bottom: 18 }}>
         <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
         <XAxis dataKey="label" tick={{ fill: "#a1a1aa", fontSize: 12 }} />

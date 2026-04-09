@@ -3,12 +3,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Check, Copy, Search, X } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useApiData } from "@/hooks/use-api-data";
-import { withResolvedDateRange } from "@/lib/date-range";
+import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
 import type { CallRecord } from "@/lib/types";
 import { formatDuration, safeNumber } from "@/lib/utils";
 import { StatusPill } from "@/components/dashboard/status-pill";
@@ -46,14 +45,14 @@ function TableSkeleton() {
 }
 
 function CallLogsPageContent() {
-  const searchParams = useSearchParams();
+  const { queryParams } = useDashboardFilters();
   const [page, setPage] = useState(0);
-  const [sessionSearch, setSessionSearch] = useState(searchParams.get("session_id") ?? "");
-  const [sessionInput, setSessionInput] = useState(searchParams.get("session_id") ?? "");
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [sessionInput, setSessionInput] = useState("");
   const [copiedSessionId, setCopiedSessionId] = useState<string | null>(null);
   const baseDateQuery = useMemo(
-    () => withResolvedDateRange(new URLSearchParams(searchParams.toString())),
-    [searchParams],
+    () => new URLSearchParams(queryParams.toString()),
+    [queryParams],
   );
 
   const callsQuery = useMemo(() => {

@@ -75,3 +75,46 @@ body {
     transform: translateX(100%);
   }
 }
+
+.premium-audio-range {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+}
+
+.premium-audio-range::-webkit-slider-runnable-track {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.premium-audio-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  border-radius: 999px;
+  background: #f8fafc;
+  box-shadow:
+    0 0 0 4px rgba(56, 189, 248, 0.2),
+    0 4px 18px rgba(15, 23, 42, 0.55);
+}
+
+.premium-audio-range::-moz-range-track {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.premium-audio-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  border-radius: 999px;
+  background: #f8fafc;
+  box-shadow:
+    0 0 0 4px rgba(56, 189, 248, 0.2),
+    0 4px 18px rgba(15, 23, 42, 0.55);
+}

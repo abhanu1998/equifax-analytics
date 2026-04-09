@@ -8,6 +8,7 @@ import {
   StandardBarChart,
 } from "@/components/dashboard/charts";
 import { MetricCard } from "@/components/dashboard/metric-card";
+import { useUniformChartHeight } from "@/hooks/use-uniform-chart-height";
 
 const categoryData = [
   { label: "Tax form 46B inquiries", value: 34 },
@@ -49,6 +50,8 @@ const sampleRows = [
 ];
 
 export default function UnidentifiedIntentsPage() {
+  const uniformChartHeight = useUniformChartHeight();
+
   return (
     <DashboardShell
       title="Unidentified Intents"
@@ -67,16 +70,20 @@ export default function UnidentifiedIntentsPage() {
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Category Distribution" subtitle="LLM-clustered unknown intents">
-          <HorizontalDistribution data={categoryData} />
+          <HorizontalDistribution data={categoryData} height={uniformChartHeight} />
         </ChartCard>
         <ChartCard title="Intent Group Split" subtitle="Top unidentified groups">
-          <IntentPieChart data={categoryData} />
+          <IntentPieChart data={categoryData} height={uniformChartHeight} />
         </ChartCard>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ChartCard title="Hourly Unidentified Trend">
-          <StandardBarChart data={trendData} valueColor="#ef4444" />
+          <StandardBarChart
+            data={trendData}
+            valueColor="#ef4444"
+            height={uniformChartHeight}
+          />
         </ChartCard>
         <section className="rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4">
           <h3 className="text-sm text-white">Sample Payload (Placeholder Rows)</h3>

@@ -1,4 +1,5 @@
 export type DatePreset =
+  | "overall"
   | "today"
   | "yesterday"
   | "last_7_days"

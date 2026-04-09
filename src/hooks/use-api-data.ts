@@ -11,7 +11,7 @@ type UseApiDataResult<T> = {
 export function useApiData<T>(
   endpoint: string,
   params: URLSearchParams,
-  minDelayMs = 2000,
+  minDelayMs = 1200,
 ): UseApiDataResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);

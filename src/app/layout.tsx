@@ -13,8 +13,13 @@ const displayFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Equifax Analytics Dashboard",
+  title: "Voicing AI Dashboard",
   description: "Premium analytics dashboard for Equifax voice intelligence",
+  icons: {
+    icon: "/equifax-favicon.svg",
+    shortcut: "/equifax-favicon.svg",
+    apple: "/equifax-favicon.svg",
+  },
 };
 
 export default function RootLayout({

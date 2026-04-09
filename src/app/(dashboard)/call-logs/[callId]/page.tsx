@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useApiData } from "@/hooks/use-api-data";
 import type {
@@ -13,6 +14,8 @@ import type {
 } from "@/lib/types";
 import { formatDuration } from "@/lib/utils";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { Button } from "@/components/ui/button";
+import { PremiumAudioPlayer } from "@/components/dashboard/premium-audio-player";
 
 function DetailSkeleton() {
   return (
@@ -41,6 +44,7 @@ function renderTimelineEntries(
 
 function CallDetailPageContent() {
   const { callId } = useParams<{ callId: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const query = useMemo(
     () => new URLSearchParams(searchParams.toString()),
@@ -86,6 +90,23 @@ function CallDetailPageContent() {
 
       {!isLoading && callRecord ? (
         <>
+          <div className="mb-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                  return;
+                }
+                router.push("/call-logs");
+              }}
+              className="gap-2"
+            >
+              <ArrowLeft className="size-4" />
+              Back to Call Logs
+            </Button>
+          </div>
+
           <div className="mb-4 grid grid-cols-1 gap-3 rounded-2xl border border-neutral-800/70 bg-neutral-900/30 p-4 md:grid-cols-2 xl:grid-cols-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500">
@@ -198,9 +219,11 @@ function CallDetailPageContent() {
                   Recording Playback
                 </h3>
                 {recording?.url ? (
-                  <audio controls className="mt-3 w-full">
-                    <source src={recording.url} />
-                  </audio>
+                  <PremiumAudioPlayer
+                    src={recording.url}
+                    expiresIn={recording.expires_in}
+                    className="mt-3"
+                  />
                 ) : (
                   <p className="mt-3 text-sm text-neutral-500">
                     Recording URL unavailable for this call.

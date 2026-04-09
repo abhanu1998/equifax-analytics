@@ -1,8 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
   ChartCard,
@@ -20,7 +18,8 @@ import {
   MetricCardSkeleton,
 } from "@/components/dashboard/metric-card";
 import { useApiData } from "@/hooks/use-api-data";
-import { withResolvedDateRange } from "@/lib/date-range";
+import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
+import { useUniformChartHeight } from "@/hooks/use-uniform-chart-height";
 import type { AnalyticsResponse } from "@/lib/types";
 import { safeNumber } from "@/lib/utils";
 
@@ -46,15 +45,12 @@ function AnalyticsSkeleton() {
 }
 
 function OverviewPageContent() {
-  const searchParams = useSearchParams();
-  const query = useMemo(
-    () => withResolvedDateRange(new URLSearchParams(searchParams.toString())),
-    [searchParams],
-  );
+  const { queryParams } = useDashboardFilters();
+  const uniformChartHeight = useUniformChartHeight();
 
   const { data, isLoading, error } = useApiData<AnalyticsResponse>(
     "/api/proxy/analytics",
-    query,
+    queryParams,
   );
 
   const intentDistribution = normalizeChartData(data?.intent_category_distribution);
@@ -114,33 +110,41 @@ function OverviewPageContent() {
 
           <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
             <ChartCard title="Intent Distribution" subtitle="Category-level split">
-              <IntentPieChart data={intentDistribution} />
+              <IntentPieChart data={intentDistribution} height={uniformChartHeight} />
             </ChartCard>
 
             <ChartCard
               title="Serviceable Intent Breakdown"
               subtitle="Top serviceable intents by volume"
             >
-              <HorizontalDistribution data={serviceable} />
+              <HorizontalDistribution data={serviceable} height={uniformChartHeight} />
             </ChartCard>
 
             <ChartCard title="Transfer by Queue" subtitle="Queue volume">
-              <IntentPieChart data={transfersByQueue} />
+              <IntentPieChart data={transfersByQueue} height={uniformChartHeight} />
             </ChartCard>
 
             <ChartCard
               title="Transfer by Intent"
               subtitle="Classified versus transferred calls"
             >
-              <DualIntentBarChart data={transfersByIntent} />
+              <DualIntentBarChart data={transfersByIntent} height={uniformChartHeight} />
             </ChartCard>
 
             <ChartCard title="Hourly Call Volume" subtitle="Call traffic by hour">
-              <StandardBarChart data={hourly} valueColor="#60a5fa" />
+              <StandardBarChart
+                data={hourly}
+                valueColor="#60a5fa"
+                height={uniformChartHeight}
+              />
             </ChartCard>
 
             <ChartCard title="Call End Reasons" subtitle="Conversation completion outcomes">
-              <StandardBarChart data={endReasons} valueColor="#f87171" />
+              <StandardBarChart
+                data={endReasons}
+                valueColor="#f87171"
+                height={uniformChartHeight}
+              />
             </ChartCard>
           </div>
         </>
