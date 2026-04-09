@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -94,13 +93,6 @@ function toHourLabel(value: unknown) {
   return `${String(parsed).padStart(2, "0")}:00`;
 }
 
-function truncateLabel(value: string, maxChars: number) {
-  if (value.length <= maxChars) {
-    return value;
-  }
-  return `${value.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
-}
-
 function computeYAxisUpperBound(values: number[]) {
   const maxValue = values.reduce((max, value) => Math.max(max, safeNumber(value)), 0);
   if (maxValue <= 0) {
@@ -108,72 +100,6 @@ function computeYAxisUpperBound(values: number[]) {
   }
   const headroom = Math.max(5, Math.ceil(maxValue * 0.1));
   return Math.max(10, Math.ceil((maxValue + headroom) / 10) * 10);
-}
-
-type DualValueLabelProps = {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  payload?: Record<string, unknown>;
-  viewBox?: { x?: number; width?: number };
-  series: "classified" | "transferred";
-  xAxisUpperBound: number;
-};
-
-function DualValueLabel({
-  x: xRaw,
-  y: yRaw,
-  width: widthRaw,
-  height: barHeightRaw,
-  payload,
-  viewBox,
-  series,
-  xAxisUpperBound,
-}: DualValueLabelProps) {
-  const x = safeNumber(xRaw);
-  const y = safeNumber(yRaw);
-  const width = safeNumber(widthRaw);
-  const barHeight = safeNumber(barHeightRaw);
-  const rightLimit = safeNumber(viewBox?.x) + safeNumber(viewBox?.width);
-  const barEnd = x + width;
-  const nearBoundary = rightLimit - barEnd < 24;
-
-  const rawValue =
-    series === "classified"
-      ? safeNumber(payload?.classifiedRaw)
-      : safeNumber(payload?.transferredRaw);
-
-  const insideLabel = nearBoundary || rawValue >= xAxisUpperBound * 0.86;
-  const textX = insideLabel ? Math.max(x + 8, barEnd - 6) : barEnd + 6;
-  const textY = y + barHeight / 2 + 4;
-  const textColor = insideLabel
-    ? series === "classified"
-      ? "#E2E8F0"
-      : "#ECFDF5"
-    : series === "classified"
-      ? "#CBD5E1"
-      : "#A7F3D0";
-
-  return (
-    <text x={textX} y={textY} textAnchor={insideLabel ? "end" : "start"} fill={textColor} fontSize={11}>
-      {rawValue.toLocaleString()}
-    </text>
-  );
-}
-
-function renderDualSeriesValueLabel(
-  props: Omit<DualValueLabelProps, "series" | "xAxisUpperBound">,
-  series: "classified" | "transferred",
-  xAxisUpperBound: number,
-) {
-  return (
-    <DualValueLabel
-      {...props}
-      series={series}
-      xAxisUpperBound={xAxisUpperBound}
-    />
-  );
 }
 
 export function normalizeChartData(source: unknown[] | undefined): ChartDatum[] {
@@ -379,47 +305,13 @@ export function DualIntentBarChart({
   data: ChartDatum[];
   height?: number;
 }) {
-  const [viewportWidth, setViewportWidth] = useState(() =>
-    typeof window === "undefined" ? 1440 : window.innerWidth,
-  );
-
-  useEffect(() => {
-    function onResize() {
-      setViewportWidth(window.innerWidth);
-    }
-
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
-
-  const labelMaxChars = viewportWidth < 640 ? 14 : viewportWidth < 1024 ? 18 : 26;
-  const yAxisWidth = viewportWidth < 640 ? 140 : viewportWidth < 1024 ? 170 : 218;
-
-  const xAxisUpperBound = useMemo(() => {
-    const values = data.flatMap((item) => [
-      safeNumber(item.classified ?? 0),
-      safeNumber(item.transferred ?? 0),
-    ]);
-    return computeYAxisUpperBound(values);
-  }, [data]);
-
-  const zeroStubWidth = Math.max(0.01, xAxisUpperBound * 0.005);
   const chartData = data
-    .map((item) => {
-      const classifiedRaw = safeNumber(item.classified ?? 0);
-      const transferredRaw = safeNumber(item.transferred ?? 0);
-      return {
-        ...item,
-        classifiedRaw,
-        transferredRaw,
-        classifiedVisual: classifiedRaw === 0 ? zeroStubWidth : classifiedRaw,
-        transferredVisual: transferredRaw === 0 ? zeroStubWidth : transferredRaw,
-      };
-    })
-    .sort((a, b) => b.classifiedRaw - a.classifiedRaw);
+    .map((item) => ({
+      ...item,
+      classified: item.classified ?? 0,
+      transferred: item.transferred ?? 0,
+    }))
+    .sort((a, b) => (b.classified ?? 0) - (a.classified ?? 0));
   const chartHeight = height;
 
   if (!chartData.length) {
@@ -433,53 +325,20 @@ export function DualIntentBarChart({
     );
   }
 
-  const renderYAxisTick = (tick: {
-    x?: number | string;
-    y?: number | string;
-    payload?: { value?: string | number };
-  }) => {
-    const full = String(tick.payload?.value ?? "");
-    const truncated = truncateLabel(full, labelMaxChars);
-    return (
-      <g transform={`translate(${safeNumber(tick.x)},${safeNumber(tick.y)})`}>
-        <title>{full}</title>
-        <text
-          x={-8}
-          y={4}
-          textAnchor="end"
-          fill="#E4E4E7"
-          fontSize={12}
-          className="select-none"
-        >
-          {truncated}
-        </text>
-      </g>
-    );
-  };
-
   return (
     <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ top: 10, right: 44, left: 8, bottom: 10 }}
-        barGap={6}
-        barCategoryGap="36%"
+        margin={{ top: 8, right: 30, left: 12, bottom: 4 }}
       >
         <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
-        <XAxis
-          type="number"
-          tick={{ fill: "#a1a1aa", fontSize: 12 }}
-          domain={[0, xAxisUpperBound]}
-          allowDataOverflow
-        />
+        <XAxis type="number" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
         <YAxis
           type="category"
           dataKey="label"
-          width={yAxisWidth}
-          tickLine={false}
-          axisLine={{ stroke: "#3f3f46" }}
-          tick={renderYAxisTick}
+          width={168}
+          tick={{ fill: "#E4E4E7", fontSize: 12 }}
         />
         <Tooltip
           contentStyle={{
@@ -492,34 +351,34 @@ export function DualIntentBarChart({
         <Legend />
         <Bar
           name="Classified"
-          dataKey="classifiedVisual"
+          dataKey="classified"
           fill="#64748b"
           radius={[0, 8, 8, 0]}
-          barSize={12}
-          minPointSize={2}
-          label={(props) =>
-            renderDualSeriesValueLabel(
-              props as Omit<DualValueLabelProps, "series" | "xAxisUpperBound">,
-              "classified",
-              xAxisUpperBound,
-            )
-          }
-        />
+          barSize={16}
+        >
+          <LabelList
+            dataKey="classified"
+            position="right"
+            fill="#CBD5E1"
+            fontSize={11}
+            formatter={(value) => safeNumber(value).toLocaleString()}
+          />
+        </Bar>
         <Bar
           name="Transferred"
-          dataKey="transferredVisual"
+          dataKey="transferred"
           fill="#10b981"
           radius={[0, 8, 8, 0]}
-          barSize={12}
-          minPointSize={2}
-          label={(props) =>
-            renderDualSeriesValueLabel(
-              props as Omit<DualValueLabelProps, "series" | "xAxisUpperBound">,
-              "transferred",
-              xAxisUpperBound,
-            )
-          }
-        />
+          barSize={16}
+        >
+          <LabelList
+            dataKey="transferred"
+            position="right"
+            fill="#A7F3D0"
+            fontSize={11}
+            formatter={(value) => safeNumber(value).toLocaleString()}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
