@@ -74,7 +74,7 @@ function CallDetailPageContent() {
 
   return (
     <DashboardShell
-      title="Call Detail"
+      title="Call Details"
       subtitle="Transcript, transfer metadata, recording, and tool-call timeline"
     >
       {isLoading ? <DetailSkeleton /> : null}
@@ -120,9 +120,9 @@ function CallDetailPageContent() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <section className="rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4 xl:col-span-2">
+            <section className="flex min-h-[460px] flex-col rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4 xl:col-span-2 xl:h-[calc(100vh-20rem)]">
               <h2 className="text-lg font-light text-white">Transcript & Timeline</h2>
-              <div className="mt-4 max-h-[500px] space-y-3 overflow-y-auto pr-2">
+              <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-2">
                 {timeline.map((entry, index) =>
                   entry.type === "message" ? (
                     <div
@@ -157,7 +157,7 @@ function CallDetailPageContent() {
               </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="grid gap-4 xl:h-[calc(100vh-20rem)] xl:grid-rows-[auto_auto_1fr]">
               <div className="rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4">
                 <h3 className="text-sm uppercase tracking-[0.16em] text-neutral-500">
                   Call Summary
@@ -208,11 +208,11 @@ function CallDetailPageContent() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4">
+              <div className="flex min-h-0 flex-col rounded-2xl border border-neutral-800/80 bg-neutral-900/45 p-4">
                 <h3 className="text-sm uppercase tracking-[0.16em] text-neutral-500">
                   Tool Calls
                 </h3>
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
                   {(detail?.tool_calls ?? []).length ? (
                     detail?.tool_calls?.map((call, index) => (
                       <div
@@ -247,7 +247,7 @@ export default function CallDetailPage() {
     <Suspense
       fallback={
         <DashboardShell
-          title="Call Detail"
+          title="Call Details"
           subtitle="Transcript, transfer metadata, recording, and tool-call timeline"
         >
           <DetailSkeleton />

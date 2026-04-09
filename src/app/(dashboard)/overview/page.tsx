@@ -136,7 +136,7 @@ function OverviewPageContent() {
             </ChartCard>
 
             <ChartCard title="Hourly Call Volume" subtitle="Call traffic by hour">
-              <StandardBarChart data={hourly} valueColor="#60a5fa" yMax={50} />
+              <StandardBarChart data={hourly} valueColor="#60a5fa" />
             </ChartCard>
 
             <ChartCard title="Call End Reasons" subtitle="Conversation completion outcomes">

@@ -52,7 +52,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        "hidden shrink-0 border-r border-neutral-800/80 bg-neutral-950/90 px-3 py-6 transition-all lg:flex lg:flex-col",
+        "hidden shrink-0 border-r border-neutral-800/80 bg-neutral-950/90 px-3 py-6 transition-all lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col",
         collapsed ? "w-20" : "w-72",
       )}
     >
@@ -86,7 +86,7 @@ export function DashboardSidebar() {
         )}
       </div>
 
-      <nav className="space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto pr-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname?.startsWith(item.href);
@@ -112,7 +112,7 @@ export function DashboardSidebar() {
 
       <div
         className={cn(
-          "mt-auto rounded-xl border border-neutral-800 bg-neutral-900/60 p-2",
+          "mt-auto shrink-0 rounded-xl border border-neutral-800 bg-neutral-900/60 p-2",
           collapsed ? "space-y-2" : "grid grid-cols-2 gap-2",
         )}
       >

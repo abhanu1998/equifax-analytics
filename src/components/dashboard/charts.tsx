@@ -41,6 +41,8 @@ const INTENT_LABELS: Record<string, string> = {
   nonserviceable: "Non Serviceable",
 };
 
+const EMPTY_CHART_HEIGHT = 280;
+
 function prettifyLabel(label: string) {
   if (INTENT_LABELS[label]) {
     return INTENT_LABELS[label];
@@ -71,9 +73,44 @@ function toLabel(entry: Record<string, unknown>) {
         entry.queue ??
         entry.reason ??
         entry.category ??
+        entry.hour_label ??
+        entry.hour ??
+        entry.hour_of_day ??
         "Unknown",
     ) || "Unknown"
   );
+}
+
+function toHourLabel(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return null;
+  }
+  const parsed = Number.parseInt(text, 10);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 23) {
+    return null;
+  }
+  return `${String(parsed).padStart(2, "0")}:00`;
+}
+
+function computeDynamicChartHeight(
+  count: number,
+  options: { min: number; max: number; perItem: number; base: number },
+) {
+  if (count <= 0) {
+    return options.min;
+  }
+  const raw = options.base + count * options.perItem;
+  return Math.max(options.min, Math.min(options.max, raw));
+}
+
+function computeYAxisUpperBound(values: number[]) {
+  const maxValue = values.reduce((max, value) => Math.max(max, safeNumber(value)), 0);
+  if (maxValue <= 0) {
+    return 10;
+  }
+  const headroom = Math.max(5, Math.ceil(maxValue * 0.1));
+  return Math.max(10, Math.ceil((maxValue + headroom) / 10) * 10);
 }
 
 export function normalizeChartData(source: unknown[] | undefined): ChartDatum[] {
@@ -87,8 +124,9 @@ export function normalizeChartData(source: unknown[] | undefined): ChartDatum[] 
         ? (item as Record<string, unknown>)
         : {};
 
+    const hourLabel = toHourLabel(record.hour ?? record.hour_of_day);
     return {
-      label: prettifyLabel(toLabel(record)),
+      label: hourLabel ?? prettifyLabel(toLabel(record)),
       value: safeNumber(record.value ?? record.count ?? record.total ?? 0),
       transferred: safeNumber(
         record.transferred ??
@@ -201,28 +239,37 @@ export function HorizontalDistribution({ data }: { data: ChartDatum[] }) {
   const chartData = [...data]
     .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value);
+  const chartHeight = computeDynamicChartHeight(chartData.length, {
+    min: 260,
+    max: 480,
+    perItem: 38,
+    base: 84,
+  });
 
   if (!chartData.length) {
     return (
-      <div className="flex h-[280px] items-center justify-center text-sm text-neutral-500">
+      <div
+        className="flex items-center justify-center text-sm text-neutral-500"
+        style={{ height: EMPTY_CHART_HEIGHT }}
+      >
         No chart data in selected range.
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ top: 12, left: 18, right: 38, bottom: 8 }}
+        margin={{ top: 8, left: 12, right: 30, bottom: 4 }}
       >
         <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
         <XAxis type="number" tick={{ fill: "#9ca3af", fontSize: 12 }} />
         <YAxis
           dataKey="label"
           type="category"
-          width={190}
+          width={168}
           tick={{ fill: "#d4d4d8", fontSize: 12 }}
         />
         <Tooltip
@@ -255,28 +302,37 @@ export function DualIntentBarChart({ data }: { data: ChartDatum[] }) {
       transferred: item.transferred ?? 0,
     }))
     .sort((a, b) => (b.classified ?? 0) - (a.classified ?? 0));
+  const chartHeight = computeDynamicChartHeight(chartData.length, {
+    min: 280,
+    max: 500,
+    perItem: 42,
+    base: 90,
+  });
 
   if (!chartData.length) {
     return (
-      <div className="flex h-[300px] items-center justify-center text-sm text-neutral-500">
+      <div
+        className="flex items-center justify-center text-sm text-neutral-500"
+        style={{ height: EMPTY_CHART_HEIGHT }}
+      >
         No chart data in selected range.
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ top: 10, right: 38, left: 20, bottom: 6 }}
+        margin={{ top: 8, right: 30, left: 12, bottom: 4 }}
       >
         <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
         <XAxis type="number" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
         <YAxis
           type="category"
           dataKey="label"
-          width={190}
+          width={168}
           tick={{ fill: "#E4E4E7", fontSize: 12 }}
         />
         <Tooltip
@@ -332,6 +388,11 @@ export function StandardBarChart({
   valueColor?: string;
   yMax?: number;
 }) {
+  const computedYMax =
+    typeof yMax === "number"
+      ? yMax
+      : computeYAxisUpperBound(data.map((item) => safeNumber(item.value)));
+
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 6, right: 8, left: 0, bottom: 18 }}>
@@ -339,8 +400,8 @@ export function StandardBarChart({
         <XAxis dataKey="label" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
         <YAxis
           tick={{ fill: "#a1a1aa", fontSize: 12 }}
-          domain={typeof yMax === "number" ? [0, yMax] : undefined}
-          allowDataOverflow={typeof yMax === "number"}
+          domain={[0, computedYMax]}
+          allowDataOverflow
         />
         <Tooltip
           contentStyle={{
