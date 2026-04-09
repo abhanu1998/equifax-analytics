@@ -145,8 +145,8 @@ export function IntentPieChart({
   const chartData = data.filter((item) => item.value > 0);
   const total = chartData.reduce((acc, item) => acc + item.value, 0);
   const chartHeight = height;
-  const shadowOuterRadius = Math.max(100, Math.round(chartHeight * 0.39));
-  const shadowInnerRadius = Math.max(62, Math.round(chartHeight * 0.24));
+  const shadowOuterRadius = Math.max(90, Math.round(chartHeight * 0.34));
+  const shadowInnerRadius = Math.max(56, Math.round(chartHeight * 0.21));
   const mainOuterRadius = Math.max(96, shadowOuterRadius - 4);
   const mainInnerRadius = Math.max(58, shadowInnerRadius - 4);
 
@@ -162,79 +162,111 @@ export function IntentPieChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={chartHeight}>
-      <PieChart margin={{ top: 12, right: 8, left: 8, bottom: 12 }}>
-        <Pie
-          data={chartData}
-          dataKey="value"
-          nameKey="label"
-          cx="36%"
-          cy="53%"
-          innerRadius={shadowInnerRadius}
-          outerRadius={shadowOuterRadius}
-          stroke="none"
-          isAnimationActive
-          labelLine={false}
-        >
-          {chartData.map((entry, index) => (
-            <Cell
-              key={`donut-shadow-${entry.label}-${index}`}
-              fill={withOpacity(PIE_COLORS[index % PIE_COLORS.length], 0.42)}
+    <div
+      style={{ height: chartHeight }}
+      className="grid h-full grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] sm:gap-4"
+    >
+      <div className="h-full min-w-0 overflow-hidden">
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <PieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="label"
+              cx="50%"
+              cy="53%"
+              innerRadius={shadowInnerRadius}
+              outerRadius={shadowOuterRadius}
+              stroke="none"
+              isAnimationActive
+              labelLine={false}
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`donut-shadow-${entry.label}-${index}`}
+                  fill={withOpacity(PIE_COLORS[index % PIE_COLORS.length], 0.42)}
+                />
+              ))}
+            </Pie>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="label"
+              cx="50%"
+              cy="50%"
+              innerRadius={mainInnerRadius}
+              outerRadius={mainOuterRadius}
+              stroke="#0B1020"
+              strokeWidth={2}
+              isAnimationActive
+              label={false}
+              labelLine={false}
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`donut-main-${entry.label}-${index}`}
+                  fill={PIE_COLORS[index % PIE_COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value, name) => {
+                const numberValue = safeNumber(value);
+                const pct = total ? (numberValue / total) * 100 : 0;
+                return [
+                  `${numberValue.toLocaleString()} (${pct.toFixed(1)}%)`,
+                  String(name),
+                ];
+              }}
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "12px",
+                color: "#e5e7eb",
+              }}
             />
-          ))}
-        </Pie>
-        <Pie
-          data={chartData}
-          dataKey="value"
-          nameKey="label"
-          cx="36%"
-          cy="50%"
-          innerRadius={mainInnerRadius}
-          outerRadius={mainOuterRadius}
-          stroke="#0B1020"
-          strokeWidth={2}
-          isAnimationActive
-          label={false}
-          labelLine={false}
-        >
-          {chartData.map((entry, index) => (
-            <Cell
-              key={`donut-main-${entry.label}-${index}`}
-              fill={PIE_COLORS[index % PIE_COLORS.length]}
-            />
-          ))}
-        </Pie>
-        <Legend
-          layout="vertical"
-          verticalAlign="middle"
-          align="right"
-          iconType="circle"
-          iconSize={9}
-          wrapperStyle={{ fontSize: "12px", color: "#D4D4D8", lineHeight: "20px" }}
-          formatter={(value, _, idx) => {
-            const point = chartData[idx];
-            const pct = total ? ((point?.value ?? 0) / total) * 100 : 0;
-            return `${value} (${(point?.value ?? 0).toLocaleString()} • ${pct.toFixed(1)}%)`;
-          }}
-        />
-        <Tooltip
-          formatter={(value, name) => {
-            const numberValue = safeNumber(value);
-            const pct = total ? (numberValue / total) * 100 : 0;
-            return [
-              `${numberValue.toLocaleString()} (${pct.toFixed(1)}%)`,
-              String(name),
-            ];
-          }}
-          contentStyle={{
-            backgroundColor: "#0f172a",
-            border: "1px solid #334155",
-            borderRadius: "12px",
-            color: "#e5e7eb",
-          }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="h-full min-h-0 overflow-y-auto rounded-xl border border-neutral-800/80 bg-neutral-950/40 p-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-b border-neutral-800/70 pb-2 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
+          <span>Intent</span>
+          <span className="text-right">Count</span>
+          <span className="text-right">Share</span>
+        </div>
+
+        <div className="mt-2 space-y-2">
+          {chartData.map((entry, index) => {
+            const count = safeNumber(entry.value);
+            const pct = total ? (count / total) * 100 : 0;
+            return (
+              <div
+                key={`legend-row-${entry.label}-${index}`}
+                className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg border border-transparent px-1 py-1 hover:border-neutral-800/70 hover:bg-neutral-900/35"
+                title={entry.label}
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
+                  />
+                  <span className="truncate text-[14px] leading-5 text-neutral-100">
+                    {entry.label}
+                  </span>
+                </div>
+                <span className="text-right text-[14px] font-medium text-neutral-200">
+                  {count.toLocaleString()}
+                </span>
+                <span className="text-right text-[13px] text-neutral-400">
+                  {pct.toFixed(1)}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
