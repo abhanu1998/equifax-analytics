@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "Voicing AI Dashboard",
   description: "Premium analytics dashboard for Equifax voice intelligence",
   icons: {
-    icon: "/equifax-favicon.svg",
-    shortcut: "/equifax-favicon.svg",
-    apple: "/equifax-favicon.svg",
+    icon: "/equifax-favicon.ico",
+    shortcut: "/equifax-favicon.ico",
+    apple: "/equifax-favicon.ico",
   },
 };
 
