@@ -1,0 +1,20 @@
+---
+description: Keep persistent context updated on every ship step
+alwaysApply: true
+---
+
+# Persistent Context Sync Rule
+
+Use `docs/PERSISTENT_CONTEXT.md` as the single source of run-state context.
+
+Before any `git commit`, GitHub push, PR creation, or Vercel production deployment:
+
+1. Update `docs/PERSISTENT_CONTEXT.md` with:
+   - latest decisions,
+   - notable UX changes,
+   - regression notes,
+   - newest commit/deploy links when available.
+2. Include `docs/PERSISTENT_CONTEXT.md` in the same commit if it changed.
+3. After deployment/push, ensure context references are current and committed.
+
+Never rename this context file unless the user explicitly requests it.
